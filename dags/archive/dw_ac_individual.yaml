@@ -1,0 +1,48 @@
+dag_id: dw_ac_individual
+start_date: 2019-05-22T00:00:00
+schedule: "30 8 * * *"
+pipeline:
+  stage:
+    - name: ext_stage_profile_to_agility_dw_ac_individual
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  stage_profile_to_agility
+      external_task_id: stage_profile_to_agility
+      on_fail:
+        - sns_alarm
+    - name: s3_from_agility_data
+      type: s3_sensor
+      retries: 24
+      retry_delay: 1800
+      depends_on_past: true
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: epsilon-agilityconnect-vip-aetnd-com
+        bucket_keys:
+          dev: dev/stage_profile_from_agility/stage_profile_to_agility_%Y%m%d*.csv.gz
+          prod: stage_profile_from_agility/stage_profile_to_agility_%Y%m%d*.csv.gz
+        run_env_aware_bucket_key: true
+        time_aware_bucket_key: true
+      depends_on:
+        - ext_stage_profile_to_agility_dw_ac_individual
+    - name: stage_profile_from_agility
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      depends_on:
+        - s3_from_agility_data
+      retries: 3
+      retry_delay: 3600
+      depends_on_past: true
+  dw:
+    - name: dw_ac_individual
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      depends_on:
+        - stage_profile_from_agility
+      retries: 3
+      retry_delay: 3600
+      depends_on_past: true

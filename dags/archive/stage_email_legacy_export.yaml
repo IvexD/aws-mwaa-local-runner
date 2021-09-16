@@ -1,0 +1,66 @@
+dag_id: stage_email_legacy_export
+start_date: 2019-09-16T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  raw:
+    - name: ext_raw_aetn_ua_user_preferences_stage_email_legacy_export
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_aetn_ua_user_preferences
+      external_task_id: etl_raw_aetn_ua_user_preferences
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_aetn_ua_change_email_stage_email_legacy_export
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_aetn_ua_change_email
+      external_task_id: etl_raw_aetn_ua_change_email
+      on_fail:
+        - sns_alarm
+    - name: ext_dw_aetn_ac_individual_stage_email_legacy_export
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  dw_aetn_ac_individual
+      external_task_id: dw_aetn_ac_individual
+      on_fail:
+        - sns_alarm
+#    - name: ext_raw_email_recipient_stage_email_legacy_export
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_email_recipient
+#      external_task_id: etl_raw_email_recipient
+#      on_fail:
+#        - sns_alarm
+#    - name: ext_raw_email_subscription_stage_email_legacy_export
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_email_subscription
+#      external_task_id: etl_raw_email_subscription
+#      on_fail:
+#        - sns_alarm
+    - name: ext_raw_email_recipient_unsub_reason_stage_email_legacy_export
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_email_recipient_unsub_reason
+      external_task_id: etl_raw_email_recipient_unsub_reason
+      on_fail:
+        - sns_alarm
+  stage:
+    - name: stage_email_legacy_export
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      trigger_rule: all_done
+      date_lag: 1
+      depends_on_past: true
+      depends_on:
+#        - ext_raw_email_recipient_stage_email_legacy_export
+#        - ext_raw_email_subscription_stage_email_legacy_export
+        - ext_dw_aetn_ac_individual_stage_email_legacy_export
+        - ext_raw_aetn_ua_user_preferences_stage_email_legacy_export
+        - ext_raw_aetn_ua_change_email_stage_email_legacy_export
+        - ext_raw_email_recipient_unsub_reason_stage_email_legacy_export

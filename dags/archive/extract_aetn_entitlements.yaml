@@ -1,0 +1,23 @@
+dag_id: extract_aetn_entitlements
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_entitlements_device_graph
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'device_graph'
+        mongo_database: 'entitlements'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/entitlements/%Y-%m-%d/device_graph.json"

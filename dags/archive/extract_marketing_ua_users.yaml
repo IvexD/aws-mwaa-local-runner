@@ -1,0 +1,16 @@
+dag_id: extract_marketing_ua_users
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_marketing_ua_users
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "prod-etl-vip-aetnd-com"
+        source_key: "raw/offerpop/%Y/%m/%d/*"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "offerpop/sweepstakes/%Y-%m-%d/"

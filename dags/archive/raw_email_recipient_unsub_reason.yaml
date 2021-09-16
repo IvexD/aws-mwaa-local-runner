@@ -1,0 +1,68 @@
+dag_id: raw_email_recipient_unsub_reason
+start_date: 2019-09-04T00:00:00
+schedule: "0 7 * * *"
+pipeline:
+  extractor:
+    - name: extractor_email_recipient_unsub_reason
+      type: sftp_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian"
+        remote_filepath: "outgoing/AE/ae_recipient_unsub_reason_%Y%m%d.txt.gpg"
+        local_filepath: "tmp/recipient_unsub_reason/ae_recipient_unsub_reason_%Y%m%d.txt"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "chitah/recipient_unsub_reason/%Y-%m-%d/recipient_unsub_reason.csv"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/decrypt_experian.sh /tmp/recipient_unsub_reason/"
+        date_lag: 1
+  upstream_check:
+    - name: s3_email_recipient_unsub_reason
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "chitah/recipient_unsub_reason/%Y-%m-%d/*"
+        time_aware_bucket_key: true
+        date_lag: 1
+      depends_on:
+        - extractor_email_recipient_unsub_reason
+  pre_dqa:
+    - name: pre_dqa_raw_email_recipient_unsub_reason
+      job_name: raw_email_recipient_unsub_reason
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: recipient_unsub_reason
+      depends_on:
+        - s3_email_recipient_unsub_reason
+  etl:
+    - name: etl_raw_email_recipient_unsub_reason
+      job_name: raw_email_recipient_unsub_reason
+      job_type: ETL
+      type: databricks
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: recipient_unsub_reason
+      depends_on:
+        - s3_email_recipient_unsub_reason

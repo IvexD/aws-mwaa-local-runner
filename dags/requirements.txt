@@ -1,0 +1,13 @@
+apache-airflow[databricks,postgres,ssh]==1.10.12
+Flask-OAuthlib
+s3fs
+pymongo
+mailchimp3
+Mako 
+mangopaysdk
+pytrends
+pandas
+tenacity
+paramiko
+sshtunnel
+watchtower==1.0.6

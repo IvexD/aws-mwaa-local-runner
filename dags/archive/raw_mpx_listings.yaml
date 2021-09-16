@@ -1,0 +1,48 @@
+dag_id: raw_mpx_listings
+start_date: 2019-08-04T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  upstream_check:
+    - name: s3_mpx_listings
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/mpx_listings/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: upstream_file_check
+      job_type: QA
+      type: databricks
+      run_missing_dates: "no"
+      retries: 4
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      on_success:
+      max_retry: 1
+      job_params:
+        source_name: mpx_listings
+      depends_on:
+        - s3_mpx_listings
+  etl:
+    - name: etl_raw_mpx_listings
+      job_name: raw_mpx_listings
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: mpx_listings
+      depends_on:
+        - upstream_file_check

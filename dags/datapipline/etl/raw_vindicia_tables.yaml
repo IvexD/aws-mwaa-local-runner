@@ -1,0 +1,16 @@
+dag_id: raw_vindicia_tables
+start_date: 2021-07-20T00:00:00
+schedule: "0 1 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_vindicia_tables
+      job_name: raw_vindicia_tables
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+

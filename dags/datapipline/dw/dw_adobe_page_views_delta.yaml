@@ -1,0 +1,29 @@
+dag_id: dw_adobe_page_views_delta
+start_date: 2021-02-25T00:00:00
+schedule: "0 17 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_adobe_omniture_events_page_views
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_adobe_omniture_events_delta
+      external_task_id: etl_raw_adobe_omniture_events
+      on_fail:
+        - sns_alarm
+    - name: stage_adobe_page_views_delta
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_raw_adobe_omniture_events_page_views
+  dw:
+    - name: dw_adobe_page_views_delta
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - stage_adobe_page_views_delta

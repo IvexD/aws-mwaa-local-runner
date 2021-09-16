@@ -1,0 +1,21 @@
+dag_id: dw_svod_metrics_by_campaign
+start_date: 2020-07-29T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+#  stage:
+#    - name: ext_raw_stripe_tables_dw_svod_metrics_by_campaign
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_stripe_tables
+#      external_task_id: etl_raw_stripe_tables
+#      on_fail:
+#        - sns_alarm
+  dw:
+    - name: dw_svod_metrics_by_campaign
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+#      depends_on:
+#        - ext_raw_stripe_tables_dw_svod_metrics_by_campaign

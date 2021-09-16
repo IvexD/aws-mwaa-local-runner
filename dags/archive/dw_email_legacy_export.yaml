@@ -1,0 +1,90 @@
+dag_id: dw_email_legacy_export
+start_date: 2019-09-16T00:00:00
+schedule: "30 9 * * *"
+pipeline:
+  dw:
+    - name: ext_stage_email_legacy_export_dw_email_legacy_export
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  stage_email_legacy_export
+      external_task_id: stage_email_legacy_export
+      on_fail:
+        - sns_alarm
+    - name: dw_email_legacy_export
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      trigger_rule: all_done
+      depends_on_past: true
+      depends_on:
+        - ext_stage_email_legacy_export_dw_email_legacy_export
+  uploader:
+    - name: uploader_email_legacy_export_recipient
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recipient.csv.gpg"
+        local_filepath: "/tmp/dw_email_legacy_export/%Y%m%d_recipient.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_legacy_export/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_legacy_export/%Y%m%d/%Y%m%d_recipient.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_legacy_export
+    - name: uploader_email_legacy_export_subscription
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_subscription.csv.gpg"
+        local_filepath: "/tmp/dw_email_legacy_export/%Y%m%d_subscription.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_legacy_export/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_legacy_export/%Y%m%d/%Y%m%d_subscription.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_legacy_export
+    - name: uploader_email_legacy_export_recipient_profile
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recipient_profile.csv.gpg"
+        local_filepath: "/tmp/dw_email_legacy_export/%Y%m%d_recipient_profile.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_legacy_export/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_legacy_export/%Y%m%d/%Y%m%d_recipient_profile.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_legacy_export
+    - name: uploader_email_legacy_export_recipient_unsub_reason
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recipient_unsub_reason.csv.gpg"
+        local_filepath: "/tmp/dw_email_legacy_export/%Y%m%d_recipient_unsub_reason.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_legacy_export/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_legacy_export/%Y%m%d/%Y%m%d_recipient_unsub_reason.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_legacy_export

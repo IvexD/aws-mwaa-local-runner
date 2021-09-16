@@ -1,0 +1,15 @@
+dag_id: extract_gigya
+start_date: 2019-04-11T00:00:00
+schedule: "50 1 * * *"
+pipeline:
+  extractor:
+    - name: extractor_gigya
+      type: gigya_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        gigya_conn_id: "gigya_db"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "gigya/sso/{today}/sso_{cursor_pos}.json"

@@ -1,0 +1,32 @@
+dag_id: dw_universal_email_user_profile
+start_date: 2020-03-19T00:00:00
+schedule: "0 8 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_iterable_email_events_universal_email_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_iterable_email_events
+      external_task_id: etl_delete_email_globally_unsubscribed
+      on_fail:
+        - sns_alarm
+    - name: ext_dw_export_user_profile_universal_email_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_export_user_profile
+      external_task_id: dw_export_user_profile
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: etl_dw_universal_email_user_profile
+      job_name: dw_universal_email_user_profile
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_iterable_email_events_universal_email_user_profile
+        - ext_dw_export_user_profile_universal_email_user_profile

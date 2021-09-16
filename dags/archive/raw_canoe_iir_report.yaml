@@ -1,0 +1,68 @@
+dag_id: raw_canoe_iir_report
+start_date: 2018-01-10T00:00:00
+schedule: "0 10 10 * *"
+pipeline:
+  extractor:
+    - name: extractor_raw_canoe_iir_report
+      type: sftp_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_canoe"
+        remote_filepath: "aenetworks_reports/AE_IIR_%Y_%m.csv"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "canoe/iir/%Y-%m-10/AE_IIR_%Y_%m.csv"
+        date_lag: -30
+  upstream_check:
+    - name: s3_canoe_iir_report
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "canoe/iir/%Y-%m-10/AE_IIR_%Y_%m.csv"
+        time_aware_bucket_key: true
+        date_lag: -30
+      depends_on:
+        - extractor_raw_canoe_iir_report
+  pre_dqa:
+    - name: pre_dqa_raw_canoe_iir_report
+      job_name: raw_canoe_iir_report
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      only_available_data: "yes"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      date_lag: -30
+      job_params:
+        source_name: iir
+      depends_on:
+        - s3_canoe_iir_report
+  etl:
+    - name: etl_raw_canoe_iir_report
+      job_name: raw_canoe_iir_report
+      job_type: ETL
+      type: databricks
+      date_lag: -30
+      only_available_data: "yes"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: iir
+      depends_on:
+        - s3_canoe_iir_report

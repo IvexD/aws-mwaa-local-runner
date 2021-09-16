@@ -1,0 +1,48 @@
+dag_id: raw_card_compliant
+start_date: 2020-09-01T00:00:00
+schedule: "40 16 1 * *"
+pipeline:
+  etl:
+    - name: etl_raw_card_compliant_stripe
+      job_name: raw_card_compliant_stripe
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+    - name: etl_raw_card_compliant_transactions
+      job_name: raw_card_compliant_transactions
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+    - name: etl_raw_card_compliant_demographic
+      job_name: raw_card_compliant_demographic
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+    - name: etl_raw_card_compliant_send
+      job_name: raw_card_compliant_send
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - etl_raw_card_compliant_transactions
+        - etl_raw_card_compliant_demographic

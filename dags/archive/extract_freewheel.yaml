@@ -1,0 +1,20 @@
+dag_id: extract_freewheel
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_freewheel_bids
+      type: http_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        http_conn_id: 'http_freewheel'
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "raw/third_party_sfx/publisher/%Y-%m-%d/bids.json"
+        endpoints:
+          - 'api/stats/publisher?token=fa43e4313b4d4751d2663377e682a3ff06033e12&group=zone&start={yesterday:%Y%m%d}&end={today:%Y%m%d}&id=181033&agencyId=1825'
+        method: 'GET'
+        headers:
+          Content-Type: 'application/json'

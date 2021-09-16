@@ -1,0 +1,14 @@
+dag_id: raw_iterable_user_full_dump
+start_date: 2020-03-25T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_iterable_user_full_dump
+      job_name: raw_iterable_user_full_dump
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600

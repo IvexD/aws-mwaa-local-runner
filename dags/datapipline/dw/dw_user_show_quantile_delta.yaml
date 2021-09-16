@@ -1,0 +1,36 @@
+dag_id: dw_user_show_quantile_delta
+start_date: 2020-07-04T00:00:00
+schedule: "30 15 * * *"
+pipeline:
+  stage_video_view_longform:
+    - name: ext_dw_video_view_longform_show_quantile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_video_view_longform_delta
+      external_task_id: dw_video_view_longform_delta
+      on_fail:
+        - sns_alarm
+#  stage_aetn_watch_videos:
+#    - name: ext_raw_aetn_watch_videos_show_quantile
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_aetn_watch_videos
+#      external_task_id: etl_raw_aetn_watch_videos
+#      on_fail:
+#        - sns_alarm
+  dw:
+    - name: dw_user_show_quantile
+      job_name: dw_user_show_quantile_delta
+      type: databricks
+      job_type: DW
+      job_params:
+        save: "Yes"
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_dw_video_view_longform_show_quantile
+#       - ext_raw_aetn_watch_videos_show_quantile

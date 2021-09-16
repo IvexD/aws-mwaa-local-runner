@@ -1,0 +1,94 @@
+dag_id: raw_aetn_watch_programs
+start_date: 2020-09-21T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  upstream_check:
+    - name: s3_aetv_programs
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/aetv_programs/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_fyi_programs
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/fyi_programs/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_history_programs
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/history_programs/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_lifetime_programs
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/lifetime_programs/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_lmn_programs
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/lmn_programs/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+  etl:
+    - name: etl_raw_aetn_watch_programs
+      job_name: raw_aetn_watch_programs
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: programs
+      depends_on:
+        - s3_aetv_programs
+        - s3_fyi_programs
+        - s3_history_programs
+        - s3_lifetime_programs
+        - s3_lmn_programs

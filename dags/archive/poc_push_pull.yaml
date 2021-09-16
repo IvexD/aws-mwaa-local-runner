@@ -1,0 +1,29 @@
+dag_id: poc_push_pull
+start_date: 2019-03-01T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: poc_sftp_pull
+      type: sftp_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian"
+        remote_filepath: "poc_sftp/input_collection.txt"
+        local_filepath: "tmp/poc_sftp/input_collection.txt"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "poc_sftp_pull/input_collection.txt"
+    - name: poc_sftp_push
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian"
+        source_bucket: "{run_env}-raw-vip-aetnd-com"
+        source_key: "poc_sftp_pull/input_collection.txt"
+        local_filepath: "tmp/poc_sftp/input_collection.txt"
+        remote_filepath: "poc_sftp/input_collection.txt"

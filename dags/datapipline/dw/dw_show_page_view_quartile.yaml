@@ -1,0 +1,22 @@
+dag_id: dw_show_page_view_quartile 
+start_date: 2021-03-30T00:00:00
+schedule: "0 19 * * *"
+pipeline:
+  stage:
+    - name: ext_dw_adobe_page_views_delta_page_view_quartile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_adobe_page_views_delta
+      external_task_id: dw_adobe_page_views_delta
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_show_page_view_quartile 
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_dw_adobe_page_views_delta_page_view_quartile
+

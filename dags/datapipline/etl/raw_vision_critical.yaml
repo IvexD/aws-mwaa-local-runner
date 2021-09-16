@@ -1,0 +1,15 @@
+dag_id: raw_vision_critical
+start_date: 2020-10-21T00:00:00
+schedule: "0 5 * * 1"
+pipeline:
+  etl:
+    - name: etl_raw_vision_critical
+      job_name: raw_vision_critical
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600

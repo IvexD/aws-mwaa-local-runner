@@ -1,0 +1,50 @@
+dag_id: raw_plutotv_earnings_report
+start_date: 2019-05-08T00:00:00
+schedule: "30 6 10 * *"
+pipeline:
+  upstream_check:
+    - name: s3_raw_plutotv_earnings_report
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "plutotv/revenue_title/%Y-%m-01/Pluto-TV-Revenue-Report*.csv"
+        time_aware_bucket_key: true
+  pre_dqa:
+    - name: pre_dqa_raw_plutotv_earnings_report
+      job_name: raw_plutotv_earnings_report
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      only_available_data: "yes"
+      job_params:
+        source_name: revenue_title
+      depends_on:
+        - s3_raw_plutotv_earnings_report
+  etl:
+    - name: etl_raw_plutotv_earnings_report
+      job_name: raw_plutotv_earnings_report
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      only_available_data: "yes"
+      retry_delay: 3600
+      job_params:
+        source_name: revenue_title
+      depends_on:
+        - s3_raw_plutotv_earnings_report

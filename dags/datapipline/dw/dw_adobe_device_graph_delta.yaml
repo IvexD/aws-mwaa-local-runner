@@ -1,0 +1,23 @@
+dag_id: dw_adobe_device_graph_delta
+start_date: 2020-06-29T00:00:00
+schedule: "30 14 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_adobe_omniture_events_device_graph
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_adobe_omniture_events_delta
+      external_task_id: etl_raw_adobe_omniture_events
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_adobe_device_graph_delta
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_adobe_omniture_events_device_graph

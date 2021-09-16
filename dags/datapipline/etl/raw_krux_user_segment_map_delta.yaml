@@ -1,0 +1,81 @@
+dag_id: raw_krux_user_segment_map_delta
+start_date: 2020-06-28T00:00:00
+schedule: "40 11 * * *"
+pipeline:
+  extractor:
+    - name: extractor_krux_user_segment_map
+      type: s3_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "krux-partners"
+        source_key: "client-aenetworks/krux-data/exports/audience-segment-map/{range_end}/*"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "krux/audience-segment-map/{range_end}/"
+        s3_conn_id: "s3_krux"
+        date_lag: -1
+  upstream_check:
+    - name: s3_krux_user_segment_map
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "krux/audience-segment-map/%Y-%m-%d/*.gz"
+        date_lag: -1
+        time_aware_bucket_key: true
+      depends_on:
+        - extractor_krux_user_segment_map
+    # - name: upstream_file_check
+    #   job_type: QA
+    #   type: databricks
+    #   run_missing_dates: "no"
+    #   on_fail:
+    #     - sns_alarm
+    #   on_success:
+    #   retries: 5
+    #   retry_delay: 10800
+    #   date_lag: -1
+    #   job_params:
+    #     source_name: audience-segment-map
+    #   depends_on:
+    #     - s3_krux_user_segment_map
+  # pre_dqa:
+  #   - name: pre_dqa_raw_krux_user_segment_map
+  #     job_name: raw_krux_user_segment_map_delta
+  #     job_type: PRE_DQA
+  #     type: databricks
+  #     run_missing_dates: "no"
+  #     on_fail:
+  #       - sns_alarm
+  #     on_success:
+  #     retries: 5
+  #     retry_delay: 10800
+  #     date_lag: -1
+  #     job_params:
+  #       source_name: audience-segment-map
+  #     depends_on:
+  #       - s3_krux_user_segment_map
+  etl:
+    - name: etl_raw_krux_user_segment_map
+      job_name: raw_krux_user_segment_map_delta
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 5
+      retry_delay: 10800
+      date_lag: -1
+      job_params:
+        source_name: audience-segment-map
+      depends_on:
+        - s3_krux_user_segment_map

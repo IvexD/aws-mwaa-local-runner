@@ -1,0 +1,62 @@
+dag_id: raw_stripe_core_metadata
+start_date: 2019-04-24T00:00:00
+schedule: "30 3 * * *"
+pipeline:
+  extractor:
+    - name: extractor_stripe_core_metadata
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "raw/stripe/core/%Y/%m/%d/metadata.csv"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "stripe/core/%Y-%m-%d/metadata.csv"
+  s3:
+    - name: s3_stripe_core_metadata
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "stripe/core/%Y-%m-%d/metadata.csv"
+        time_aware_bucket_key: true
+      depends_on:
+        - extractor_stripe_core_metadata
+  pre_dqa:
+    - name: pre_dqa_raw_stripe_core_metadata
+      job_name: raw_stripe_core_metadata
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: core
+      depends_on:
+        - s3_stripe_core_metadata
+  etl:
+    - name: etl_raw_stripe_core_metadata
+      job_name: raw_stripe_core_metadata
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: core
+      depends_on:
+        - s3_stripe_core_metadata

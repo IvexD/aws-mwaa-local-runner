@@ -1,0 +1,24 @@
+dag_id: dw_aetn_ac_individual
+start_date: 2019-08-07T00:00:00
+schedule: "30 8 * * *"
+pipeline:
+  dw:
+    - name: ext_stage_profile_to_agility_dw_aetn_ac_individual
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  stage_profile_to_agility
+      external_task_id: stage_profile_to_agility
+      on_fail:
+        - sns_alarm
+    - name: dw_aetn_ac_individual
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      trigger_rule: all_done
+      depends_on_past: true
+      depends_on:
+        - ext_stage_profile_to_agility_dw_aetn_ac_individual

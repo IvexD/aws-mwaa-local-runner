@@ -1,0 +1,31 @@
+dag_id: dw_adobe_user_graph_delta
+start_date: 2020-06-28T00:00:00
+schedule: "30 14 * * *"
+pipeline:
+  stage:
+    - name: ext_dw_ac_individual_user_graph
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_ac_individual_delta
+      external_task_id: dw_ac_individual_delta
+      on_fail:
+        - sns_alarm
+    - name: ext_dw_adobe_device_graph_delta_user_graph
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  dw_adobe_device_graph_delta
+      external_task_id: dw_adobe_device_graph_delta
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_adobe_user_graph_delta
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+      depends_on:
+        - ext_dw_ac_individual_user_graph
+        - ext_dw_adobe_device_graph_delta_user_graph
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm

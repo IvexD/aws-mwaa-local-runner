@@ -1,0 +1,65 @@
+dag_id: raw_mailchimp_lists_delta
+start_date: 2020-07-01T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  extractor:
+    - name: extractor_mailchimp_lists_s3
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "raw/mailchimp/saymedia/%Y/%m/%d/lists.csv"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "mailchimp/saymedia/%Y-%m-%d/"
+        date_lag: 1
+  upstream_check:
+    - name: s3_mailchimp_lists
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "mailchimp/saymedia/%Y-%m-%d/lists.csv"
+        time_aware_bucket_key: true
+        date_lag: 1
+      depends_on:
+        - extractor_mailchimp_lists_s3
+#  pre_dqa:
+#    - name: pre_dqa_raw_mailchimp_lists
+#      job_name: raw_mailchimp_lists
+#      job_type: PRE_DQA
+#      type: databricks
+#      run_missing_dates: "no"
+#      on_fail:
+#        - sns_alarm
+#      on_success:
+#      retries: 3
+#      retry_delay: 3600
+#      job_params:
+#        source_name: saymedia
+#      depends_on:
+#        - s3_mailchimp_lists
+  etl:
+    - name: etl_raw_mailchimp_lists
+      job_name: raw_mailchimp_lists_delta
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      date_lag: 1
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: saymedia
+      depends_on:
+        - s3_mailchimp_lists

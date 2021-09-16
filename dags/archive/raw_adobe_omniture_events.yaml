@@ -1,0 +1,62 @@
+dag_id: raw_adobe_omniture_events
+start_date: 2019-01-18T00:00:00
+schedule: "30 7 * * *"
+pipeline:
+  extractor:
+    - name: extractor_adobe_omniture_events
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "adobe.sources.vip.aetndigital.com"
+        source_key: "clickstream/*aetnavodglobal_%Y%m%d-*0000*"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "adobe/clickstream/%Y-%m-%d/"
+  upstream_check:
+    - name: s3_adobe_omniture_events
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "adobe/clickstream/%Y-%m-%d/*-{idx:02d}0000*.gz"
+        time_aware_bucket_key: true
+        data_range:
+          - 0
+          - 23
+      depends_on:
+        - extractor_adobe_omniture_events
+ #   - name: upstream_file_check
+ #     job_type: QA
+ #     type: databricks
+ #     run_missing_dates: "no"
+ #     retries: 4
+ #     retry_delay: 3600
+ #     on_fail:
+ #       - sns_alarm
+ #     on_success:
+ #     max_retry: 1
+ #     job_params:
+ #     depends_on:
+ #       - s3_adobe_omniture_events
+  etl:
+    - name: etl_raw_adobe_omniture_events
+      job_name: raw_adobe_omniture_events
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+      depends_on:
+        - s3_adobe_omniture_events

@@ -1,0 +1,57 @@
+dag_id: stage_profile_to_agility
+start_date: 2019-08-07T00:00:00
+schedule: "45 7 * * *"
+pipeline:
+  raw:
+    - name: ext_raw_gigya_sso_accounts_ac_individual
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_gigya_sso_accounts
+      external_task_id: etl_raw_gigya_sso_accounts
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_gigya_sso_identities_ac_individual
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_gigya_sso_identities
+      external_task_id: etl_raw_gigya_sso_identities
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_aetn_ua_users_ac_individual
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_aetn_ua_users
+      external_task_id: etl_raw_aetn_ua_users
+      on_fail:
+        - sns_alarm
+#    - name: ext_raw_email_recipient_ac_individual
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_email_recipient
+#      external_task_id: etl_raw_email_recipient
+#      on_fail:
+#        - sns_alarm
+#    - name: ext_raw_marketing_ua_users_ac_individual
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_marketing_ua_users
+#      external_task_id: etl_raw_marketing_ua_users
+#      on_fail:
+#        - sns_alarm
+  stage:
+    - name: stage_profile_to_agility
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      trigger_rule: all_done
+      depends_on_past: true
+      depends_on:
+        - ext_raw_gigya_sso_accounts_ac_individual
+        - ext_raw_gigya_sso_identities_ac_individual
+        - ext_raw_aetn_ua_users_ac_individual
+#        - ext_raw_email_recipient_ac_individual
+#        - ext_raw_marketing_ua_users_ac_individual

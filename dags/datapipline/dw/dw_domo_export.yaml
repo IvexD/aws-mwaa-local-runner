@@ -1,0 +1,14 @@
+dag_id: dw_domo_export
+start_date: 2020-03-18T00:00:00
+schedule: "30 9 * * *"
+pipeline:
+  dw:
+    - name: dw_domo_export
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600

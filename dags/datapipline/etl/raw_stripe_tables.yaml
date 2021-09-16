@@ -1,0 +1,15 @@
+dag_id: raw_stripe_tables
+start_date: 2020-04-28T00:00:00
+schedule: "30 3 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_stripe_tables
+      job_name: raw_stripe_tables
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "yes"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600

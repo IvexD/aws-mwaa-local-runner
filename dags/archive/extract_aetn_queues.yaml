@@ -1,0 +1,27 @@
+dag_id: extract_aetn_queues
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_queues
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+            - 'aetv'
+            - 'fyi'
+            - 'history'
+            - 'lifetime'
+        mongo_database: 'queues'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/queues/%Y-%m-%d/queues.json"
+        replace: false

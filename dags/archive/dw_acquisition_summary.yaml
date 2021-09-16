@@ -1,0 +1,54 @@
+dag_id: dw_acquisition_summary
+start_date: 2019-09-20T00:00:00
+schedule: "0 15 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_email_recipient_dw_acquisition_summary
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_recipient
+      external_task_id: etl_raw_email_recipient
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_email_subscription_dw_acquisition_summary
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_subscription
+      external_task_id: etl_raw_email_subscription
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_aetn_ac_individual_dw_acquisition_summary
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_aetn_ac_individual
+      external_task_id: dw_aetn_ac_individual
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_gigya_sso_data_dw_acquisition_summary
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_gigya_sso_data
+      external_task_id: etl_raw_gigya_sso_data
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_gigya_sso_accounts_dw_acquisition_summary
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_gigya_sso_accounts
+      external_task_id: etl_raw_gigya_sso_accounts
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_acquisition_summary
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+      depends_on:
+        - ext_raw_email_recipient_dw_acquisition_summary
+        - ext_raw_email_subscription_dw_acquisition_summary
+        - ext_raw_aetn_ac_individual_dw_acquisition_summary
+        - ext_raw_gigya_sso_data_dw_acquisition_summary
+        - ext_raw_gigya_sso_accounts_dw_acquisition_summary
+      retries: 3
+      retry_delay: 3600
+

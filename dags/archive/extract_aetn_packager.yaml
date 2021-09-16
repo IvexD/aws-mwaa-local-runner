@@ -1,0 +1,20 @@
+dag_id: extract_aetn_packager
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_packager
+      type: mongo_delete
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'downloadRequestSegment'
+        mongo_database: 'packager'
+        mongo_filter:
+          modified:
+            $lt: '{today}'
+            justOne: false

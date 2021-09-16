@@ -1,0 +1,62 @@
+dag_id: dw_email_segment
+start_date: 2020-04-13T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  dw:
+    - name: ext_raw_gigya_sso_accounts_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_gigya_sso_accounts
+      external_task_id: etl_raw_gigya_sso_accounts
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_aetn_entitlements_subscriptions_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_aetn_entitlements_subscriptions_delta
+      external_task_id: etl_raw_aetn_entitlements_subscriptions_delta
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_stripe_subscriptions_subscription_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_stripe_subscriptions_subscription
+      external_task_id: etl_raw_stripe_subscriptions_subscription
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_stripe_core_customer_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_stripe_core_customer
+      external_task_id: etl_raw_stripe_core_customer
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_stripe_core_metadata_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_stripe_core_metadata
+      external_task_id: etl_raw_stripe_core_metadata
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_iterable_email_events_email_segment
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_iterable_email_events
+      external_task_id: etl_delete_email_globally_unsubscribed
+      on_fail:
+        - sns_alarm
+    - name: dw_email_segment
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_gigya_sso_accounts_email_segment
+        - ext_raw_aetn_entitlements_subscriptions_email_segment
+        - ext_raw_stripe_subscriptions_subscription_email_segment
+        - ext_raw_stripe_core_customer_email_segment
+        - ext_raw_stripe_core_metadata_email_segment
+        - ext_raw_iterable_email_events_email_segment

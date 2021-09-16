@@ -1,0 +1,24 @@
+dag_id: raw_iterable_unsub_process
+start_date: 2020-10-05T00:00:00
+schedule: "0 11 * * *"
+pipeline:
+#  stage:
+#    - name: ext_raw_iterable_email_events_unsub_process
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_iterable_email_events
+#      external_task_id: etl_raw_iterable_email_events
+#      on_fail:
+#        - sns_alarm
+  etl:
+    - name: etl_raw_iterable_unsub_process
+      job_name: raw_iterable_unsub_process
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+#      depends_on:
+#        - ext_raw_iterable_email_events_unsub_process

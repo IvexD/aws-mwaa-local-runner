@@ -1,0 +1,26 @@
+dag_id: extract_facebook
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_facebook_bids
+      type: facebook_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        http_conn_id: 'http_facebook'
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "raw/facebook/fanrevenue/%Y-%m-%d/fan{num}.json"
+        product_ids:
+          - '161137501046183'
+          - '2212449198780475'
+          - '742300442587643'
+          - '1756642214652838'
+          - '184503032102908'
+          - '154948838702893'
+        data:
+          since: '%Y-%m-%d'
+          until: '%Y-%m-%d'
+          access_token: 'EAAWXG2NLjgEBAKdwYBUE0j7Nme8BSpGZApZCzlwOvzW6OtzyOZCVx02avwo3JQjP5aTVndvrjUXF5MIxMbKFYQcmwVIPFZAsyaoB8HVEXYCbVkjp3V5wCbvb1XzrpSRZCRxAeAbaQXweBTXyFYZBOhzjW4xf16KnLPl6CeRIWrProUsrKJpqpo'

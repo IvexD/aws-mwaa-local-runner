@@ -1,0 +1,88 @@
+dag_id: google_trends_exporter
+start_date: 2019-08-03T00:00:00
+schedule: "40 16 * * *"
+pipeline:
+  csv_export:
+    - name: export_trends_table
+      job_name: table_to_csv_exporter
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 5
+      retry_delay: 10800
+  local_importer:
+    - name: extractor_import_raw
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        local: True
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "trend_exporter/%Y-%m-%d/raw/*.csv"
+        dest_key: "/tmp/trend_exporter/%Y-%m-%d/raw/"
+        dest_bucket: ""
+      depends_on:
+        - export_trends_table
+  transform:
+    - name: transform_trends_geo_12m
+      type: trends_transformer
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        frequency: 12
+        trend_type: geo
+        input_path: "/tmp/trend_exporter/%Y-%m-%d/raw/{}.csv"
+        output_path: "/tmp/trend_exporter/%Y-%m-%d/trends_{}_geo_12m.csv"
+      depends_on:
+        - extractor_import_raw
+    - name: transform_trends_history_12m
+      type: trends_transformer
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        frequency: 12
+        trend_type: history
+        input_path: "/tmp/trend_exporter/%Y-%m-%d/raw/{}.csv"
+        output_path: "/tmp/trend_exporter/%Y-%m-%d/trends_{}_history_12m.csv"
+      depends_on:
+        - extractor_import_raw
+  local_exporter:
+    - name: extractor_export_trends
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        local: True
+        dest_bucket: "prod-cheetah-vip-aetnd-com"
+        dest_key: "trend_exporter/%Y-%m-%d/"
+        source_key: "/tmp/trend_exporter/%Y-%m-%d/*.csv"
+        source_bucket: ""
+      depends_on:
+        - transform_trends_geo_12m
+        - transform_trends_history_12m
+  databricks_import:
+    - name: trends_importer
+      job_name: trends_importer
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        type: geo
+      depends_on:
+        - extractor_export_trends

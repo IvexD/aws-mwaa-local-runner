@@ -1,0 +1,44 @@
+dag_id: dw_content_optimization_finance_report
+start_date: 2019-09-24T00:00:00
+schedule: "30 6 10 * *"
+pipeline:
+  stage_tubitv:
+    - name: ext_tubitv_content_optimization_finance_report
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_tubitv_adrise_content_report
+      external_task_id: etl_raw_tubitv_adrise_content_report
+      on_fail:
+        - sns_alarm
+  stage_plutotv:
+    - name: ext_plutotv_content_optimization_finance_report
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_plutotv_earnings_report
+      external_task_id: etl_raw_plutotv_earnings_report
+      on_fail:
+        - sns_alarm
+  stage_amazon:
+    - name: ext_amazon_content_optimization_finance_report
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_amazon_earnings_report
+      external_task_id: etl_raw_amazon_earnings_report
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_content_optimization_finance_report
+      job_name: dw_content_optimization_finance_report
+      type: databricks
+      job_type: ETL
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_tubitv_content_optimization_finance_report
+        - ext_plutotv_content_optimization_finance_report
+        - ext_amazon_content_optimization_finance_report
+

@@ -1,0 +1,29 @@
+dag_id: extract_krux
+start_date: 2020-03-01T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_krux_page_attributes
+      type: s3_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "krux-partners"
+        source_key: "client-aenetworks/krux-data/exports/page-attributes/{range_end}/*"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "krux/page-attributes/{range_end}/"
+        s3_conn_id: "s3_krux"
+    - name: extractor_krux_site_hierarchy
+      type: s3_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        source_bucket: "krux-partners"
+        source_key: "client-aenetworks/krux-data/exports/site-hierarchy/{range_end}/*"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "krux/site-hierarchy/{range_end}/"
+        s3_conn_id: "s3_krux"

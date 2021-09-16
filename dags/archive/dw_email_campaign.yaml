@@ -1,0 +1,47 @@
+dag_id: dw_email_campaign
+start_date: 2019-12-29T00:00:00
+schedule: "0 7 * * *"
+pipeline:
+  raw:
+    - name: ext_raw_email_send_email_campaign
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_send
+      external_task_id: etl_raw_email_send
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_email_bounce_email_campaign
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_bounce
+      external_task_id: etl_raw_email_bounce
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_email_open_email_campaign
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_open
+      external_task_id: etl_raw_email_open
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_email_click_email_campaign
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_email_click
+      external_task_id: etl_raw_email_click
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_email_campaign
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_email_send_email_campaign
+        - ext_raw_email_bounce_email_campaign
+        - ext_raw_email_open_email_campaign
+        - ext_raw_email_click_email_campaign

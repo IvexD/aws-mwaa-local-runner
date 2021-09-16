@@ -1,0 +1,23 @@
+dag_id: dw_gigya_login_history
+start_date: 2018-11-19T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  raw:
+    - name: raw_gigya_sso_accounts
+      type: databricks
+      job_type: ETL
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: sso
+  dw:
+    - name: dw_gigya_login_history
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      depends_on:
+        - raw_gigya_sso_accounts
+      retries: 3
+      retry_delay: 3600

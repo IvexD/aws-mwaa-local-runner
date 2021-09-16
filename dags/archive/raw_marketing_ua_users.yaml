@@ -1,0 +1,58 @@
+dag_id: raw_marketing_ua_users
+start_date: 2018-08-31T00:00:00
+schedule: "@once"
+pipeline:
+  upstream_check:
+    - name: s3_marketing_ua_users
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retry_delay: 60
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "offerpop/sweepstakes/%Y-%m-%d/*.csv"
+        time_aware_bucket_key: true
+#    - name: upstream_file_check
+#      job_type: QA
+#      type: databricks
+#      run_missing_dates: "no"
+#      on_fail:
+#        - sns_alarm
+#      on_success:
+#      max_retry: 1
+#      job_params:
+#        source_name: sweepstakes
+#      depends_on:
+#        - s3_offerpop_sweestakes
+  pre_dqa:
+    - name: pre_dqa_raw_marketing_ua_users
+      job_name: raw_marketing_ua_users
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      max_retry: 1
+      job_params:
+        source_name: sweepstakes
+      depends_on:
+        - s3_marketing_ua_users
+  etl:
+    - name: etl_raw_marketing_ua_users
+      job_name: raw_marketing_ua_users
+      job_type: ETL
+      type: databricks
+      only_available_data: "yes"
+      on_fail:
+        - sns_alarm
+      on_success:
+      max_retry: 3
+      job_params:
+        source_name: sweepstakes
+      depends_on:
+        - s3_marketing_ua_users

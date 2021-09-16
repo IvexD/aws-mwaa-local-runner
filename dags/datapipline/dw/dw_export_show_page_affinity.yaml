@@ -1,0 +1,23 @@
+dag_id: dw_export_show_page_affinity
+start_date: 2021-03-30T00:00:00
+schedule: "0 20 * * *"
+pipeline:
+  stage:
+    - name: ext_dw_show_page_view_quartile_show_page_affinity
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_show_page_view_quartile
+      external_task_id: dw_show_page_view_quartile
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_export_show_page_affinity
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_dw_show_page_view_quartile_show_page_affinity
+
+

@@ -1,0 +1,537 @@
+dag_id: extract_aetn_watch
+start_date: 2019-07-10T00:00:00
+schedule: "30 7 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_watch_videos_aetv
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'aetv'
+        mongo_database: 'aetv'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/aetv.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_fyi
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'fyi'
+        mongo_database: 'fyi'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/fyi.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_history
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'history'
+        mongo_database: 'history'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/history.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_lifetime
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'lifetime'
+        mongo_database: 'lifetime'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/lifetime.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_lmn
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'lmn'
+        mongo_database: 'lmn'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/lmn.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_lmc
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'lmc'
+        mongo_database: 'lmc'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/lmc.json"
+        replace: false
+    - name: extractor_aetn_watch_videos_historyvault
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_videos'
+        mongo_collection:
+            - 'historyvault'
+        mongo_database: 'historyvault'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_videos/%Y-%m-%d/historyvault.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_aetv
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'aetv'
+        mongo_database: 'aetv'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/aetv.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_fyi
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'fyi'
+        mongo_database: 'fyi'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/fyi.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_history
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'history'
+        mongo_database: 'history'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/history.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_lifetime
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'lifetime'
+        mongo_database: 'lifetime'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/lifetime.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_lmn
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'lmn'
+        mongo_database: 'lmn'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/lmn.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_lmc
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'lmc'
+        mongo_database: 'lmc'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/lmc.json"
+        replace: false
+    - name: extractor_aetn_watch_programs_historyvault
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_programs'
+        mongo_collection:
+            - 'historyvault'
+        mongo_database: 'historyvault'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_programs/%Y-%m-%d/historyvault.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_aetv
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'aetv'
+        mongo_database: 'aetv'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/aetv.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_fyi
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'fyi'
+        mongo_database: 'fyi'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/fyi.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_history
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'history'
+        mongo_database: 'history'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/history.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_lifetime
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'lifetime'
+        mongo_database: 'lifetime'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/lifetime.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_lmn
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'lmn'
+        mongo_database: 'lmn'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/lmn.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_lmc
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'lmc'
+        mongo_database: 'lmc'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/lmc.json"
+        replace: false
+    - name: extractor_aetn_watch_seasons_historyvault
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_seasons'
+        mongo_collection:
+            - 'historyvault'
+        mongo_database: 'historyvault'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_seasons/%Y-%m-%d/historyvault.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_aetv
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'aetv'
+        mongo_database: 'aetv'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/aetv.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_fyi
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'fyi'
+        mongo_database: 'fyi'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/fyi.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_history
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'history'
+        mongo_database: 'history'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/history.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_lifetime
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'lifetime'
+        mongo_database: 'lifetime'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/lifetime.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_lmn
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'lmn'
+        mongo_database: 'lmn'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/lmn.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_lmc
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'lmc'
+        mongo_database: 'lmc'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/lmc.json"
+        replace: false
+    - name: extractor_aetn_watch_listings_historyvault
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn_watch_listings'
+        mongo_collection:
+            - 'historyvault'
+        mongo_database: 'historyvault'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/content_listings/%Y-%m-%d/historyvault.json"
+        replace: false

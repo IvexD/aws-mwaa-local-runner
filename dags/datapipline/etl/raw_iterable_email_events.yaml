@@ -1,0 +1,25 @@
+dag_id: raw_iterable_email_events
+start_date: 2020-03-11T00:00:00
+schedule: "30 7 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_iterable_email_events
+      job_name: raw_iterable_email_events
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+    - name: etl_delete_email_globally_unsubscribed
+      job_name: delete_email_globally_unsubscribed
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - etl_raw_iterable_email_events

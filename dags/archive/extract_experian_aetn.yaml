@@ -1,0 +1,65 @@
+dag_id: extract_experian_aetn
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_experian_aetn_email_trigger_by_segment
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_email_trigger_by_segment.csv.gpg"
+        local_filepath: "tmp/email_trigger_by_segment_aetn/"
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "export/experian/email_trigger_by_segment/%Y/%m/%d/%Y%m%d_email_trigger_by_segment.csv.gpg"
+    - name: extractor_experian_aetn_recip_profile
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recip_profile.csv.gpg"
+        local_filepath: "tmp/recip_profile_aetn/"
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "export/experian/recip_profile/%Y/%m/%d/%Y%m%d_recip_profile.csv.gpg"
+    - name: extractor_experian_aetn_recipient
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recipient.csv.gpg"
+        local_filepath: "tmp/recipient_aetn/"
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "export/experian/recipient/%Y/%m/%d/%Y%m%d_recipient.csv.gpg"
+    - name: extractor_experian_aetn_recipient_unsub_reason
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_recipient_unsub_reason.csv.gpg"
+        local_filepath: "tmp/recipient_unsub_reason_aetn/"
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "export/experian/recipient_unsub_reason/%Y/%m/%d/%Y%m%d_recipient_unsub_reason.csv.gpg"
+    - name: extractor_experian_aetn_subscription
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_subscription.csv.gpg"
+        local_filepath: "tmp/subscription_aetn/"
+        source_bucket: "{run_env}-etl-vip-aetnd-com"
+        source_key: "export/experian/subscription/%Y/%m/%d/%Y%m%d_subscription.csv.gpg"

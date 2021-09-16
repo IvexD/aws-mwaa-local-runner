@@ -1,0 +1,59 @@
+dag_id: raw_aetn_pulse_points
+start_date: 2019-09-19T00:00:00
+schedule: "0 7 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_pulse_points
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'aetv'
+          - 'fyi'
+          - 'history'
+          - 'lifetime'
+          - 'lmn'
+          - 'lmc'
+          - 'historyvault'
+        mongo_database: 'pulse'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/pulse/%Y-%m-%d/points.json"
+        replace: false
+  upstream_check:
+    - name: upstream_file_check
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/pulse/%Y-%m-%d/points.json"
+        time_aware_bucket_key: true
+      depends_on:
+        - extractor_aetn_pulse_points
+  etl:
+    - name: etl_raw_aetn_pulse_points
+      job_name: raw_pulse_points
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - upstream_file_check

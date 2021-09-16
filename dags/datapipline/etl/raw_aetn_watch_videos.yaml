@@ -1,0 +1,94 @@
+dag_id: raw_aetn_watch_videos
+start_date: 2020-09-21T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  upstream_check:
+    - name: s3_aetv_videos
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/aetv_videos/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_fyi_videos
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/fyi_videos/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_history_videos
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/history_videos/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_lifetime_videos
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/lifetime_videos/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_lmn_videos
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/lmn_videos/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+  etl:
+    - name: etl_raw_aetn_watch_videos
+      job_name: raw_aetn_watch_videos
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: videos
+      depends_on:
+        - s3_aetv_videos
+        - s3_fyi_videos
+        - s3_history_videos
+        - s3_lifetime_videos
+        - s3_lmn_videos

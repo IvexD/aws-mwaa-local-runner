@@ -1,0 +1,44 @@
+dag_id: dw_svod_video_view_longform
+start_date: 2021-09-01T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+  upstream_check:
+    - name: s3_svod_video_view_longform
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "prod-transfer-adobe-analytics-vip-aetnd-com"
+        bucket_key: "svod-data-feed/daily/*_daily%Y%m%d.zip"
+        time_aware_bucket_key: true
+  extractor:
+    - name: extractor_svod_video_view_longform
+      type: s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_bucket: "prod-transfer-adobe-analytics-vip-aetnd-com"
+        source_key: "svod-data-feed/daily/*_daily%Y%m%d.zip"
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "adobe/svod-data-feed/%Y-%m-%d/"
+      depends_on:
+        - s3_svod_video_view_longform
+  dw:
+    - name: dw_svod_video_view_longform
+      job_name: dw_svod_video_view_longform
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on_past: true
+      depends_on:
+        - extractor_svod_video_view_longform

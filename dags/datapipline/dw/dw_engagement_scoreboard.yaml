@@ -1,0 +1,21 @@
+dag_id: dw_engagement_scoreboard
+start_date: 2019-09-18T00:00:00
+schedule: "30 10 * * *"
+pipeline:
+#  stage:
+#    - name: ext_raw_email_subscription_engagement_scoreboard
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_email_subscription
+#      external_task_id: etl_raw_email_subscription
+#      on_fail:
+#        - sns_alarm
+  dw:
+    - name: dw_engagement_scoreboard
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+#      depends_on:
+#        - ext_raw_email_subscription_engagement_scoreboard
+      retries: 3
+      retry_delay: 3600

@@ -1,0 +1,32 @@
+dag_id: lookup_liveramp_device_graph
+start_date: 2018-09-05T00:00:00
+schedule: "@once"
+pipeline:
+  upstream_check:
+    - name: s3_lookup_liveramp_device_graph
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retry_delay: 60
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "liveramp/device_graph/%Y-%m-%d/*.gz"
+        time_aware_bucket_key: true
+  etl:
+    - name: etl_lookup_liveramp_device_graph
+      job_name: lookup_liveramp_device_graph
+      job_type: ETL
+      type: databricks
+      only_available_data: "yes"
+      on_fail:
+        - sns_alarm
+      on_success:
+      max_retry: 3
+      job_params:
+        source_name: device_graph
+      depends_on:
+        - s3_lookup_liveramp_device_graph

@@ -1,0 +1,77 @@
+dag_id: extract_aetn_ua
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_aetn_ua_change_email
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'change_email'
+        mongo_database: 'ua'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/ua/%Y-%m-%d/change_email.json"
+    - name: extractor_aetn_ua_preferences
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'users'
+        mongo_database: 'ua'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/ua/%Y-%m-%d/preferences.json"
+    - name: extractor_aetn_ua_user_profile
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'user_profile'
+        mongo_database: 'ua'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/ua/%Y-%m-%d/user_profile.json"
+    - name: extractor_aetn_ua_users
+      type: mongo_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mongo_conn_id: 'mongo_aetn'
+        mongo_collection:
+          - 'users'
+        mongo_database: 'ua'
+        mongo_query:
+          updated_at:
+            $lt: '{today}'
+            $gte: '{yesterday}'
+        s3_conn_id: 's3_etl_raw_vip'
+        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+        s3_key: "aetn/ua/%Y-%m-%d/users.json"

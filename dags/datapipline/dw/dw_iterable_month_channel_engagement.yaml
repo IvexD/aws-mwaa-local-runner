@@ -1,0 +1,12 @@
+dag_id: dw_iterable_month_channel_engagement
+start_date: 2021-08-01T00:00:00
+schedule: "0 6 1 * *"
+pipeline:
+  dw:
+    - name: dw_iterable_month_channel_engagement
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      date_lag: 31

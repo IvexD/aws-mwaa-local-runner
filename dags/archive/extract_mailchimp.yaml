@@ -1,0 +1,17 @@
+dag_id: extract_mailchimp
+start_date: 2019-04-11T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  extractor:
+    - name: extractor_mailchimp
+      type: mailchimp_to_s3_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        mc_dict:
+          40f7ac02bb5b25bf13a6b7dcdc02f073-us3: 'ec4b64e320'
+          63df73cb272f0d79e16fd79c4e8f9d77-us3: '8a128a8fa6'
+        dest_bucket: "{run_env}-raw-vip-aetnd-com"
+        dest_key: "raw/mailchimp/saymedia/%Y-%m-%d/{}.json"

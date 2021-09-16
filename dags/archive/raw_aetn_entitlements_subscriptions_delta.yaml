@@ -1,0 +1,83 @@
+dag_id: raw_aetn_entitlements_subscriptions_delta
+start_date: 2020-07-01T00:00:00
+schedule: "0 5 * * *"
+pipeline:
+#  extractor:
+#    - name: extractor_aetn_entitlements_subscriptions
+#      type: mongo_to_s3_copy
+#      on_fail:
+#        - sns_alarm
+#      retries: 5
+#      retry_delay: 10800
+#      job_params:
+#        mongo_conn_id: 'mongo_aetn'
+#        mongo_collection:
+#          - 'subscriptions'
+#        mongo_database: 'entitlements'
+#        mongo_query:
+#          updated_at:
+#            $lt: '{today}'
+#            $gte: '{yesterday}'
+#        s3_conn_id: 's3_etl_raw_vip'
+#        s3_bucket: "{run_env}-raw-vip-aetnd-com"
+#        s3_key: "aetn/entitlements/%Y-%m-%d/subscriptions.csv"
+  upstream_check:
+    - name: s3_aetn_entitlements_subscriptions
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/entitlements/%Y-%m-%d/subscriptions.csv"
+        time_aware_bucket_key: true
+#      depends_on:
+#        - extractor_aetn_entitlements_subscriptions
+#    - name: upstream_file_check
+#      job_type: QA
+#      type: databricks
+#      run_missing_dates: "no"
+#      retries: 4
+#      retry_delay: 3600
+#      on_fail:
+#        - sns_alarm
+#      on_success:
+#      max_retry: 1
+#      job_params:
+#        source_name: entitlements
+#      depends_on:
+#        - s3_aetn_entitlements_subscriptions
+  # pre_dqa:
+  #   - name: pre_dqa_raw_aetn_entitlements_subscriptions
+  #     job_name: raw_aetn_entitlements_subscriptions_delta
+  #     job_type: PRE_DQA
+  #     type: databricks
+  #     run_missing_dates: "no"
+  #     on_fail:
+  #       - sns_alarm
+  #     on_success:
+  #     retries: 3
+  #     retry_delay: 3600
+  #     job_params:
+  #       source_name: entitlements
+  #     depends_on:
+  #       - s3_aetn_entitlements_subscriptions
+  etl:
+    - name: etl_raw_aetn_entitlements_subscriptions_delta
+      job_name: raw_aetn_entitlements_subscriptions_delta
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: entitlements
+      depends_on:
+        - s3_aetn_entitlements_subscriptions

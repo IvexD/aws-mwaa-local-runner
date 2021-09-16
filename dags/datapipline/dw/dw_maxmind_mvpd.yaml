@@ -1,0 +1,64 @@
+dag_id: dw_maxmind_mvpd
+start_date: 2020-07-07T00:00:00
+schedule: "0 21 * * *"
+pipeline:
+  stage:
+#    - name: ext_raw_iterable_user_full_dump_maxmind_mvpd
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_iterable_user_full_dump
+#      external_task_id: etl_raw_iterable_user_full_dump
+#      on_fail:
+#        - sns_alarm
+#    - name: ext_raw_iterable_email_events_maxmind_mvpd
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_iterable_email_events
+#      external_task_id: etl_delete_email_globally_unsubscribed
+#      on_fail:
+#        - sns_alarm
+    - name: ext_dw_adobe_user_graph_delta_maxmind_mvpd
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  dw_adobe_user_graph_delta
+      external_task_id: dw_adobe_user_graph_delta
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_krux_site_user_data_maxmind_mvpd
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id:  raw_krux_site_user_data_delta
+      external_task_id: etl_raw_krux_site_user_data
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_adobe_omniture_events_maxmind_mvpd
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_adobe_omniture_events_delta
+      external_task_id: etl_raw_adobe_omniture_events
+      on_fail:
+        - sns_alarm
+#    - name: ext_raw_gigya_sso_maxmind_mvpd
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id:  raw_gigya_sso
+#      external_task_id: etl_raw_gigya_sso
+#      on_fail:
+#        - sns_alarm
+  dw:
+    - name: dw_maxmind_mvpd
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      date_lag: -1
+      on_fail:
+        - sns_alarm
+      depends_on:
+#        - ext_raw_iterable_user_full_dump_maxmind_mvpd
+#        - ext_raw_iterable_email_events_maxmind_mvpd
+        - ext_dw_adobe_user_graph_delta_maxmind_mvpd
+        - ext_raw_krux_site_user_data_maxmind_mvpd
+        - ext_raw_adobe_omniture_events_maxmind_mvpd
+#        - ext_raw_gigya_sso_maxmind_mvpd

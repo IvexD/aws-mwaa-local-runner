@@ -1,0 +1,64 @@
+dag_id: dw_email_ongoing_business_rules
+start_date: 2019-08-02T00:00:00
+schedule: "0 8 * * *"
+pipeline:
+#  stage:
+#    - name: ext_raw_email_recipient_email_ongoing
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_email_recipient
+#      external_task_id: etl_raw_email_recipient
+#      on_fail:
+#        - sns_alarm
+#    - name: ext_raw_email_subscription_email_ongoing
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: raw_email_subscription
+#      external_task_id: etl_raw_email_subscription
+#      on_fail:
+#        - sns_alarm
+  dw:
+    - name: dw_email_ongoing_business_rules
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+#      depends_on:
+#        - ext_raw_email_recipient_email_ongoing
+#        - ext_raw_email_subscription_email_ongoing
+  uploader:
+    - name: uploader_email_ongoing_business_rules_recipient
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_raw_email_recipient_databricks.csv.gpg"
+        local_filepath: "/tmp/dw_email_ongoing_business_rules/%Y%m%d_raw_email_recipient_databricks.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_ongoing_business_rules/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_ongoing_business_rules/%Y%m%d/%Y%m%d_raw_email_recipient_databricks.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_ongoing_business_rules
+    - name: uploader_email_ongoing_business_rules_subscription
+      type: s3_to_sftp_copy
+      on_fail:
+        - sns_alarm
+      retries: 5
+      retry_delay: 10800
+      job_params:
+        ssh_conn_id: "sftp_experian_ae"
+        remote_filepath: "incoming/%Y%m%d_raw_email_subscription_databricks.csv.gpg"
+        local_filepath: "/tmp/dw_email_ongoing_business_rules/%Y%m%d_raw_email_subscription_databricks.csv.gpg"
+        transform_script: "/bin/sh /usr/local/airflow/dags/aetn/scripts/encrypt_cheetah.sh /tmp/dw_email_ongoing_business_rules/"
+        source_bucket: "prod-cheetah-vip-aetnd-com"
+        source_key: "dw_email_ongoing_business_rules/%Y%m%d/%Y%m%d_raw_email_subscription_databricks.csv"
+        date_lag: 1
+      depends_on:
+        - dw_email_ongoing_business_rules

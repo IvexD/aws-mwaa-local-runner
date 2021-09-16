@@ -1,0 +1,14 @@
+dag_id: raw_gigya_sso
+start_date: 2020-04-13T00:00:00
+schedule: "0 6 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_gigya_sso
+      job_name: raw_gigya_sso
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "yes"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600

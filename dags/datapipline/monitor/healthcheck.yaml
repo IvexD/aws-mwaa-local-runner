@@ -1,0 +1,17 @@
+dag_id: healthcheck
+start_date: 2020-07-07T00:00:00
+schedule: "0 */3 * * *"
+pipeline:
+  monitor:
+    - name: healthcheck_query
+      job_type: HEALTHCHECK
+      type: postgres_with_alert
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      job_params:
+        sql: datapipline/monitor/sql/dag_healthcheck.sql
+        message_format: "$(0): STATUS - $(1)"
+        subject_format: "$(0): UNHEALTHY DAG(s)"
+        postgres_conn_id: airflow_db
+        sns_alarm: True

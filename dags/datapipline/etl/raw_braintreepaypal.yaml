@@ -1,0 +1,14 @@
+dag_id: raw_braintreepaypal
+start_date: 2020-10-05T00:00:00
+schedule: "0 6 * * *"
+pipeline:
+  etl:
+    - name: etl_raw_braintreepaypal
+      job_name: raw_braintreepaypal
+      job_type: ETL
+      type: databricks
+      run_missing_dates: "yes"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600

@@ -1,0 +1,14 @@
+dag_id: dw_email_engagement_campaign_domo
+start_date: 2021-02-08T00:00:00
+schedule: "30 12 * * *"
+pipeline:
+  dw:
+    - name: dw_email_engagement_campaign_domo
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      on_fail:
+        - sns_alarm
+      retries: 3
+      retry_delay: 3600
+

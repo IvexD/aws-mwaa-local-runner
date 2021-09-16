@@ -1,0 +1,47 @@
+dag_id: dw_export_user_profile_video
+start_date: 2020-03-26T00:00:00
+schedule: "0 14 * * *"
+pipeline:
+  stage:
+    - name: ext_dw_adobe_user_graph_export_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_adobe_user_graph
+      external_task_id: dw_adobe_user_graph
+      on_fail:
+        - sns_alarm
+    - name: ext_dw_user_show_quantile_export_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_user_show_quantile
+      external_task_id: dw_user_show_quantile
+      on_fail:
+        - sns_alarm
+    - name: ext_dw_adobe_sessions_export_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_adobe_sessions
+      external_task_id: dw_adobe_sessions
+      on_fail:
+        - sns_alarm
+    - name: ext_raw_iterable_email_events_export_user_profile
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_iterable_email_events
+      external_task_id: etl_delete_email_globally_unsubscribed
+      on_fail:
+        - sns_alarm
+  dw:
+    - name: dw_export_user_profile_video
+      type: databricks
+      job_type: DW
+      run_missing_dates: "yes"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_dw_adobe_user_graph_export_user_profile
+        - ext_dw_user_show_quantile_export_user_profile
+        - ext_dw_adobe_sessions_export_user_profile
+        - ext_raw_iterable_email_events_export_user_profile

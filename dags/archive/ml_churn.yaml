@@ -1,0 +1,33 @@
+dag_id: ml_churn
+start_date: 2019-07-31T00:00:00
+schedule: "50 23 * * *"
+pipeline:
+  stage:
+    - name: ext_dw_adobe_sessions_churn
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: dw_adobe_sessions
+      external_task_id: dw_adobe_sessions
+      on_fail:
+        - sns_alarm
+  ml:
+    - name: churn_model_segment
+      type: databricks
+      job_type: ML
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - ext_dw_adobe_sessions_churn
+      job_params:
+        period_key: 31 days
+    - name: run_churn_jobs
+      type: databricks
+      job_type: ML
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - churn_model_segment
+      job_params:
+        period_key: 31 days

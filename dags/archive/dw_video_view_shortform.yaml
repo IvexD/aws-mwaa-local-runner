@@ -1,0 +1,33 @@
+dag_id: dw_video_view_shortform
+start_date: 2019-01-24T00:00:00
+schedule: "0 22 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_adobe_omniture_events_shortform
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_adobe_omniture_events
+      external_task_id: etl_raw_adobe_omniture_events
+      on_fail:
+        - sns_alarm
+    - name: stage_video_view_shortform
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_adobe_omniture_events_shortform
+  dw:
+    - name: dw_video_view_shortform
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - stage_video_view_shortform

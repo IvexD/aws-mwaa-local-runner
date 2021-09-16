@@ -1,0 +1,75 @@
+dag_id: raw_gigya_sso_accounts
+start_date: 2018-11-08T00:00:00
+schedule: "50 6 * * *"
+pipeline:
+#  extractor:
+#    - name: ext_extract_gigya_sso_accounts
+#      type: external_task_sensor
+#      run_missing_dates: "no"
+#      external_dag_id: extract_gigya
+#      external_task_id: extractor_gigya
+#      on_fail:
+#        - sns_alarm
+  upstream_check:
+    - name: s3_gigya_sso_accounts
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      depends_on_past: false
+      retries: 4
+      retry_delay: 3600
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "gigya/sso/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+        date_lag: 1
+#      depends_on:
+#        - ext_extract_gigya_sso_accounts
+    # - name: upstream_file_check
+    #   job_type: QA
+    #   type: databricks
+    #   run_missing_dates: "no"
+    #   retries: 4
+    #   retry_delay: 3600
+    #   date_lag: 1
+    #   on_fail:
+    #     - sns_alarm
+    #   on_success:
+    #   job_params:
+    #     source_name: sso
+    #   depends_on:
+    #     - s3_gigya_sso_accounts
+  pre_dqa:
+    - name: pre_dqa_raw_gigya_sso_accounts
+      job_name: raw_gigya_sso_accounts
+      job_type: PRE_DQA
+      type: databricks
+      run_missing_dates: "no"
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: sso
+      depends_on:
+        - s3_gigya_sso_accounts
+  etl:
+    - name: etl_raw_gigya_sso_accounts
+      job_name: raw_gigya_sso_accounts
+      job_type: ETL
+      type: databricks
+      date_lag: 1
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      job_params:
+        source_name: sso
+      depends_on:
+        - s3_gigya_sso_accounts

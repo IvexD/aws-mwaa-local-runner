@@ -1,0 +1,33 @@
+dag_id: dw_video_view_longform_delta
+start_date: 2020-06-28T00:00:00
+schedule: "30 14 * * *"
+pipeline:
+  stage:
+    - name: ext_raw_adobe_omniture_events_longform
+      type: external_task_sensor
+      run_missing_dates: "no"
+      external_dag_id: raw_adobe_omniture_events_delta
+      external_task_id: etl_raw_adobe_omniture_events
+      on_fail:
+        - sns_alarm
+    - name: stage_video_view_longform_delta
+      type: databricks
+      job_type: STAGE
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - ext_raw_adobe_omniture_events_longform
+  dw:
+    - name: dw_video_view_longform_delta
+      type: databricks
+      job_type: DW
+      run_missing_dates: "no"
+      retries: 3
+      retry_delay: 3600
+      on_fail:
+        - sns_alarm
+      depends_on:
+        - stage_video_view_longform_delta

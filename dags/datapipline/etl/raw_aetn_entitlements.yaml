@@ -1,0 +1,56 @@
+dag_id: raw_aetn_entitlements
+start_date: 2020-09-23T00:00:00
+schedule: "0 9 * * *"
+pipeline:
+  upstream_check:
+    - name: s3_aetn_entitlements_subscriptions
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/entitlements_subscriptions/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+    - name: s3_aetn_entitlements_products
+      type: s3_sensor
+      on_fail:
+        - sns_alarm
+      retries: 4
+      retry_delay: 3600
+      depends_on_past: false
+      s3_key:
+        timeout: 120
+        poke_interval: 60
+        wildcard_match: True
+        bucket_name: "{run_env}-raw-vip-aetnd-com"
+        bucket_key: "aetn/entitlements_products/%Y-%m-%d/*.json"
+        time_aware_bucket_key: true
+  etl:
+    - name: etl_raw_aetn_entitlements_subscriptions
+      job_name: raw_aetn_entitlements_subscriptions
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - s3_aetn_entitlements_subscriptions
+    - name: etl_raw_aetn_entitlements_products
+      job_name: raw_aetn_entitlements_products
+      job_type: ETL
+      type: databricks
+      on_fail:
+        - sns_alarm
+      on_success:
+      retries: 3
+      retry_delay: 3600
+      depends_on:
+        - s3_aetn_entitlements_products
