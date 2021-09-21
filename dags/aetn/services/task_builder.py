@@ -1,7 +1,6 @@
 import json
 import logging
 import pendulum
-from dateutil import parser
 
 from collections import defaultdict
 from functools import partial
@@ -361,25 +360,20 @@ class ExternalTaskSensorTaskBuilder(AbstractTaskBuilder):
             Date is taken from current DAG execution date and time is read
             from last external DAG run date
             """
-            # TI = TaskInstance
-            # _ti = session.query(TI).filter(
-            #     TI.dag_id == activity['external_dag_id'],
-            #     TI.task_id == activity['external_task_id']
-            # ).order_by(desc(TI.execution_date)).first()
+            TI = TaskInstance
+            _ti = session.query(TI).filter(
+                TI.dag_id == activity['external_dag_id'],
+                TI.task_id == activity['external_task_id']
+            ).order_by(desc(TI.execution_date)).first()
 
-            # dttm = '{} {}'.format(
-            #     args[0].to_date_string(),
-            #     _ti.execution_date.strftime('%H:%M:%S')
-            # )
-
-            # logger.info("EXECUTION_DATE_FN =" + str(pendulum.parse(dttm)))
-            # print("EXECUTION_DATE_FN =", pendulum.parse(dttm))
+            dttm = '{} {}'.format(
+                execution_date.to_date_string(),
+                _ti.execution_date.strftime('%H:%M:%S')
+            )
             
-#            return parser.parse('2021-09-20T07:30:00')
+            #dttm = '2021-09-20T07:30:00'           
             
-            return pendulum.parse('2021-09-20T07:30:00')
-            
-#            return pendulum.parse(dttm)
+            return pendulum.parse(dttm)
 
         task = ExternalTaskSensor(
             task_id=task_id,
