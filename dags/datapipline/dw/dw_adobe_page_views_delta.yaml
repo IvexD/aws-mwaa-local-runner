@@ -1,5 +1,5 @@
 dag_id: dw_adobe_page_views_delta
-start_date: 2021-02-25T00:00:00
+start_date: 2021-09-20T00:00:00
 schedule: "0 17 * * *"
 pipeline:
   stage:
