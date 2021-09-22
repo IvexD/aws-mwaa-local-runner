@@ -1,5 +1,5 @@
 dag_id: dw_export_user_profile_video_delta
-start_date: 2021-03-31T00:00:00
+start_date: 2021-09-20T00:00:00
 schedule: "0 14 * * *"
 pipeline:
   stage:

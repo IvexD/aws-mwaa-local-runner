@@ -1,5 +1,5 @@
 dag_id: dw_user_show_quantile_delta
-start_date: 2020-07-04T00:00:00
+start_date: 2021-09-20T00:00:00
 schedule: "30 15 * * *"
 pipeline:
   stage_video_view_longform:
