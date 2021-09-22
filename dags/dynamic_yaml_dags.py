@@ -26,6 +26,7 @@ from aetn.services.yaml_reader import load_dags_from_yaml
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("POC DYNAMIC DAG")
+logger.info("Hello world! It Works!")
 
 RUN_ENV = Variable.get("run_env")
 YAML_INPUT_DIR = os.path.join(os.environ.get("AIRFLOW_HOME", ""), "dags/datapipline/**/")

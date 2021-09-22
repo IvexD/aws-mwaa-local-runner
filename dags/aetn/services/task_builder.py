@@ -354,7 +354,7 @@ class ExternalTaskSensorTaskBuilder(AbstractTaskBuilder):
     @provide_session
     def build_task(self, task_id, activity, dag, session=None):
 
-        def execution_date(execution_date,*args):
+        def execution_date(dag_exec_date, *args):
             """
             Returns external task execution date and time.
             Date is taken from current DAG execution date and time is read
@@ -367,7 +367,7 @@ class ExternalTaskSensorTaskBuilder(AbstractTaskBuilder):
             ).order_by(desc(TI.execution_date)).first()
 
             dttm = '{} {}'.format(
-                execution_date.to_date_string(),
+                dag_exec_date.to_date_string(),
                 _ti.execution_date.strftime('%H:%M:%S')
             )
             
