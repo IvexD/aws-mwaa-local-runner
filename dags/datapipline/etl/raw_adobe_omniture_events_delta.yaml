@@ -1,5 +1,5 @@
 dag_id: raw_adobe_omniture_events_delta
-start_date: 2021-09-20T00:00:00
+start_date: 2021-10-07T00:00:00
 schedule: "30 7 * * *"
 pipeline:
   extractor:
